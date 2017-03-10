@@ -4,12 +4,19 @@
 #include <ctype.h>
 #include "types.h"
 #define TAM 100
-#define TAMF 11
+#define TAMF 12
 
 
 /*
 getCPF FECHADA
-
+validaCPF FECHADA
+validaNome FECHADA
+getNome FECHADA
+formataNome FECHADA
+formataCPF FECHADA
+validaNome FECHADA
+getFone FECHADA
+formataFone ARREDONDANDO???
 
 */
 
@@ -53,11 +60,9 @@ void moduloCliente(FILE * arq) {
 
 void getCPF(char * cpf) {
     int i = 0;
-    char aux;
     printf("Digite o CPF: ");
     while(i < 11) {
-        aux = getche();
-        cpf[i] = aux;
+        cpf[i] = getche();
         i++;
     }
     if(i == 11) {
@@ -105,19 +110,27 @@ int validaCPF(char * cpf) {
     return 1;
 }
 
-void formataCPF(char * cpf){
+char formataCPF(char * cpf){
     char cpfaux[14];
-    int i, j = 0;
+    int i, j=0;
     for(i=0; i < 11; i++){
         if(i == 3 || i == 6){
             cpfaux[j] = '.';
             j++;
+            cpfaux[j] = cpf[i];
+        }
+        else if(i == 9){
+            cpfaux[j] = '-';
+            j++;
+            cpfaux[j] = cpf[i];
         }
         else{
             cpfaux[j] = cpf[i];
         }
+        j++;
     }
-    cpf = cpfaux;
+    cpfaux[j] = '\0';
+    strcpy(cpf, cpfaux);
 }
 
 void getNome(char * nome) {
@@ -172,6 +185,10 @@ void formataNome(char * nome) {
     for(i = 1; nome[i] != '\0'; i++) {
         if(nome[i] == ' ') {
             nome[i+1] = toupper(nome[i+1]);
+            i++;
+        }
+        else{
+            nome[i] = tolower(nome[i]);
         }
     }
 }
@@ -179,33 +196,90 @@ void formataNome(char * nome) {
 void getFone(char * fone) {
     int i = 0;
     char aux;
-    printf("Digite o Telefone de contato: ");
-    while(i < TAMF) {
+    printf("\nDigite o Telefone de contato com codigo de area: ");
+    while(i < TAMF - 1) {
         aux = getche();
-        if(isdigit(aux) != 1) {
+        if(aux == 13){
             fone[i] = '\0';
             return;
-        } else if(aux == 13) {
-            fone[i] = '\0';
-            break;
-        } else {
+        }
+        else{
             fone[i] = aux;
             i++;
         }
     }
-    if(i == TAMF) {
-        fone[i] = '\0';
+    if(i < TAMF - 1){
+        fone[i+1] = '\0';
     }
 }
 
 int validaFone(char * fone) {
     int i;
-    for(i = 0; fone[i] != '\0'; i++) {
+    for(i=0; fone[i] != '\0'; i++) {
         if(isdigit(fone[i]) != 1) {
             return 0;
         }
     }
     return 1;
+}
+
+void formataFone(char * fone){
+    int i, j=0;
+    char foneaux[TAMF];
+    for(i=0; fone[i] != '\0'; i++){
+        if(i==0){
+            foneaux[j] = '(';
+            j++;
+            foneaux[j] = fone[i];
+        }
+        else if (i == 2){
+            foneaux[j] = ')';
+            j++;
+            foneaux[j] = fone[i];
+        }
+        else{
+            foneaux[j] = fone[i];
+        }
+        j++;
+    }
+    foneaux[j] = '\0';
+    strcpy(fone, foneaux);
+}
+
+void getEmail(char * email){
+    int i = 0;
+    char aux;
+    printf("\nDigite o E-Mail: ");
+    while(i < TAM - 1){
+        aux = getche();
+        if(aux == 13){
+            email[i] = '\0';
+        }
+        else{
+            email[i] = aux;
+        }
+    }
+    if(i < TAM - 1){
+        email[i] = '\0';
+    }
+}
+
+int validaEmail(char * email){
+    int i, flag = 0;
+    for(i=0; email[i] != '\0'; i++){
+        if(isspace(email[i]) == 1 || isalnum(email[i]) != 1 || email[i] != '.'){
+            return 0;
+        }
+        if(email[i] == '@'){
+            flag ++;
+        }
+    }
+    if(flag != 1){
+        return 0;
+    }
+    else{
+        return 1;
+    }
 }
 
 void exibirTudo(FILE * arq) {
@@ -218,6 +292,7 @@ void exibirTudo(FILE * arq) {
         printf("Telefone: %s\n\n", aux.fone);
         fread(&aux, sizeof(TCliente), 1, arq);
     }
+    printf("Arquivo vazio!\n");
 }
 
 void cadastroCliente(FILE * arq) {
@@ -227,6 +302,7 @@ void cadastroCliente(FILE * arq) {
     if (arq == NULL)
         printf ("Erro ao tentar criar/abrir arquivo \n");
     else {
+            /*
         do {
             getCPF(&cpf);
             result = validaCPF(&cpf);
@@ -252,8 +328,8 @@ void cadastroCliente(FILE * arq) {
             getNome(&nome);
             result = validaNome(&nome);
             if(result != 1) {
-                printf("O nome digitado e invalido! Digite novamente: ");
-                status == 0;
+                printf("\nO nome digitado e invalido! Digite novamente: ");
+                status = 0;
             } else {
                 formataNome(&nome);
                 status = 1;
@@ -263,22 +339,26 @@ void cadastroCliente(FILE * arq) {
             getFone(&fone);
             result = validaFone(&fone);
             if(result != 1){
-                printf("O Telefone digitado e invalido! Digite novamente: ");
+                printf("\nO Telefone digitado e invalido! Digite novamente: ");
                 status = 0;
             }
             else{
+                formataFone(&fone);
                 status = 1;
             }
         } while(status != 1);
+        printf("%s", fone);
+        */
         do{
             getEmail(&email);
-            status = validaEmail(&email);
-            if(status != 1){
-                printf("E-Mail digitado invalido! Digte novamente: ");
-            }
-            else{
+            printf("%s", email);
+           // status = validaEmail(&email);
+           // if(status != 1){
+            //    printf("E-Mail digitado invalido! Digte novamente: ");
+         //   }
+         //   else{
                 status = 1;
-            }
+         //   }
         }while(status != 1);
         printf("%s", fone);
         strcpy(novo.cpf, cpf);
@@ -292,39 +372,6 @@ void cadastroCliente(FILE * arq) {
         else{
             printf("Usuario regisrado com sucesso!\n");
         }
-    }
-}
-
-void getEmail(char * email){
-    int i = 0;
-    char aux;
-    printf("\nDigite o E-Mail do cliente: ");
-    while(i < TAM - 1){
-        aux = getche();
-        if(aux == 13){
-            email[i] = '\0';
-        }
-        else{
-            email[i] = aux;
-        }
-    }
-}
-
-int validaEmail(char * email){
-    int i, flag = 0;
-    for(i=0; email[i] != '\0'; i++){
-        if(isspace(email[i]) == 1 || isalnum(email[i]) != 1 || email[i] != '.'){
-            return 0;
-        }
-        if(email[i] == '@'){
-            flag ++;
-        }
-    }
-    if(flag != 1){
-        return 0;
-    }
-    else{
-        return 1;
     }
 }
 
@@ -344,8 +391,4 @@ void exibirCliente(FILE * arq, char cpf[]){
         }
     }
     printf("Cliente nao encontrado!\n");
-}
-
-void alterarUsuario(FILE * arq){
-    int i;
 }

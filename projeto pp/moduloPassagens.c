@@ -9,4 +9,3 @@ void moduloVendaPassagem() {
         }
     } while(op != 0);
 }
-
